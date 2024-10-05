@@ -1,3 +1,5 @@
-﻿var calculation = new Greed.Calculation();
+﻿var parsingService = new GreedParsingService();
+var evaluateService = new GreedEvaluateService();
 Console.WriteLine("Hi there! Wellcome to our game! Have you already rolled the dice?");
-Console.WriteLine("Your great result is: " + calculation.FinalResults());
+var listOfPlayerDice = parsingService.GetPlayerResults();
+Console.WriteLine("Your great result is: " + evaluateService.FinalResults(listOfPlayerDice));
