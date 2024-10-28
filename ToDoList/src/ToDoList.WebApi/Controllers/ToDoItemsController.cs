@@ -10,7 +10,12 @@ using ToDoList.Domain.Models;
 public class ToDoItemsController : ControllerBase
 {
 
-    private static readonly List<ToDoItem> toDoItems = [];
+    public readonly List<ToDoItem> toDoItems;
+    public ToDoItemsController(List<ToDoItem>? toDoItems = null)
+    {
+        this.toDoItems = toDoItems;
+    }
+
 
     [HttpPost]
     [Route("api/ToDoItems")]
@@ -32,13 +37,13 @@ public class ToDoItemsController : ControllerBase
 
     [HttpGet]
     [Route("api/ToDoItems")]
-    public IActionResult Read()
+    public ActionResult<IEnumerable<ToDoItemGetResponseDto>> Read()
     {
         var response = new List<ToDoItemGetResponseDto>();
 
         try
         {
-            if (toDoItems == null || toDoItems.Count == 0)
+            if (toDoItems.Count == 0)
             {
                 return NotFound();
             }
@@ -57,15 +62,16 @@ public class ToDoItemsController : ControllerBase
 
     [HttpGet]
     [Route("api/ToDoItems/{toDoItemId}")]
-    public IActionResult ReadById(int toDoItemId)
+    public ActionResult<ToDoItemGetResponseDto> ReadById(int toDoItemId)
     {
         try
         {
-            var toDoItem = toDoItems.Find(o => o.ToDoItemId == toDoItemId);
-            if (toDoItem == null)
+            var indexOfReadInstance = toDoItems.FindIndex(o => o.ToDoItemId == toDoItemId);
+            if (indexOfReadInstance == -1)
             {
                 return NotFound();
             }
+            var toDoItem = toDoItems.Find(o => o.ToDoItemId == toDoItemId);
             var response = ToDoItemGetResponseDto.FromDomain(toDoItem);
             return Ok(response);
         }
@@ -84,7 +90,7 @@ public class ToDoItemsController : ControllerBase
             var currentToDoItem = toDoItems.FirstOrDefault(o => o.ToDoItemId == toDoItemId);
             var indexOfOldInstance = toDoItems.FindIndex(o => o.ToDoItemId == toDoItemId);
 
-            if (currentToDoItem == null || indexOfOldInstance == -1)
+            if (indexOfOldInstance == -1)
             {
                 return NotFound();
             }
@@ -107,12 +113,13 @@ public class ToDoItemsController : ControllerBase
     {
         try
         {
-            var itemToDelete = toDoItems.Find(o => o.ToDoItemId == toDoItemId);
-            if (itemToDelete == null)
+            var indexOfInstanceToDelete = toDoItems.FindIndex(o => o.ToDoItemId == toDoItemId);
+
+            if (indexOfInstanceToDelete == -1)
             {
                 return NotFound();
             }
-
+            var itemToDelete = toDoItems.Find(o => o.ToDoItemId == indexOfInstanceToDelete);
             toDoItems.Remove(itemToDelete);
             return NoContent();
         }
