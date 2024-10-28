@@ -20,7 +20,7 @@ public class GetByIdTests
         var result = controller.ReadById(999);
 
         // Assert
-        Assert.IsType<NotFoundResult>(result);
+        Assert.IsType<NotFoundResult>(result.Result);
     }
 
     [Fact]
