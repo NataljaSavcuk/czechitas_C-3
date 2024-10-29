@@ -19,27 +19,27 @@ POST {{host}}:{{port}}/api/ToDoItems
 Content-Type: application/json
 
 {
-  "name": "Example New Task",
-  "description": "Example New Description",
-  "isCompleted": false
+  "name": "Test",
+  "description": "This is test",
+  "isCompleted": true
 }
 
 ###
 
 //Update existing ToDoItem by id
-@itemToUpdateId = 1
+@itemToUpdateId = 5
 
 PUT {{host}}:{{port}}/api/ToDoItems/{{itemToUpdateId}}
 Content-Type: application/json
 
 {
-  "name": "Updated Task",
-  "description": "Updated Description",
+  "name": "Update",
+  "description": null,
   "isCompleted": false
 }
 
 ###
 
 //Delete exisiting ToDoItem by id
-@itemToDeleteId = 1
+@itemToDeleteId = 4
 DELETE {{host}}:{{port}}/api/ToDoItems/{{itemToDeleteId}}

@@ -10,8 +10,8 @@ using ToDoList.Persistence;
 namespace ToDoList.Persistence.Migrations
 {
     [DbContext(typeof(ToDoItemsContext))]
-    [Migration("20241023173602_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20241028193849_ToDoItemValidationUpdate")]
+    partial class ToDoItemValidationUpdate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -27,6 +27,7 @@ namespace ToDoList.Persistence.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
+                        .HasMaxLength(250)
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsCompleted")

@@ -10,8 +10,8 @@ using ToDoList.Persistence;
 namespace ToDoList.Persistence.Migrations
 {
     [DbContext(typeof(ToDoItemsContext))]
-    [Migration("20241023174822_ToDoItemValidationUpdate")]
-    partial class ToDoItemValidationUpdate
+    [Migration("20241028192726_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

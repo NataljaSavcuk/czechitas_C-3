@@ -13,9 +13,9 @@ public class ToDoItemsContext : DbContext
     }
 
     public DbSet<ToDoItem> ToDoItems { get; set; }
-
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         optionsBuilder.UseSqlite(connectionString);
     }
+
 }
