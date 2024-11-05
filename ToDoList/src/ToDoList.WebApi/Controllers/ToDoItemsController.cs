@@ -4,41 +4,37 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using ToDoList.Domain.DTO;
 using ToDoList.Domain.Models;
-using ToDoList.Persistence;
+using ToDoList.Persistence.Repository;
 
 [ApiController]
 
-public class ToDoItemsController(ToDoItemsContext context) : ControllerBase
+public class ToDoItemsController(IRepository<ToDoItem> repository) : ControllerBase
 {
-    public readonly List<ToDoItem> toDoItems;
-    private readonly ToDoItemsContext context = context;
+    private readonly IRepository<ToDoItem> repository = repository;
 
     [HttpPost]
     [Route("api/ToDoItems")]
     public IActionResult Create([FromBody] ToDoItemCreateRequestDto request)
     {
         var newToDoItem = request.ToDomain();
-
         try
         {
-            context.Add(newToDoItem);
-            context.SaveChanges();
+            repository.Create(newToDoItem);
+            return CreatedAtAction(nameof(ReadById), new { toDoItemId = newToDoItem.ToDoItemId }, newToDoItem);
         }
         catch (Exception ex)
         {
             return Problem(ex.Message, null, StatusCodes.Status500InternalServerError);
         }
-        return CreatedAtAction(nameof(ReadById), new { toDoItemid = newToDoItem.ToDoItemId }, newToDoItem);
     }
 
     [HttpGet]
     [Route("api/ToDoItems")]
     public ActionResult<IEnumerable<ToDoItemGetResponseDto>> Read()
     {
-        var toDoItems = context.ToDoItems.ToList();
-
         try
         {
+            var toDoItems = repository.Read().ToList();
             if (toDoItems.Count == 0)
             {
                 return NotFound();
@@ -53,13 +49,14 @@ public class ToDoItemsController(ToDoItemsContext context) : ControllerBase
         }
     }
 
+
     [HttpGet]
     [Route("api/ToDoItems/{toDoItemId}")]
     public ActionResult<ToDoItemGetResponseDto> ReadById(int toDoItemId)
     {
         try
         {
-            var toDoItem = context.ToDoItems.Find(toDoItemId);
+            var toDoItem = repository.ReadById(toDoItemId);
 
             if (toDoItem != null)
             {
@@ -80,15 +77,14 @@ public class ToDoItemsController(ToDoItemsContext context) : ControllerBase
     {
         try
         {
-            var currentToDoItem = context.ToDoItems.Find(toDoItemId);
-
+            var currentToDoItem = repository.ReadById(toDoItemId);
             if (currentToDoItem != null)
             {
                 currentToDoItem.Name = request.Name ?? currentToDoItem.Name;
                 currentToDoItem.Description = request.Description ?? currentToDoItem.Description;
                 currentToDoItem.IsCompleted = request.IsCompleted;
 
-                context.SaveChanges();
+                repository.UpdateById(currentToDoItem);
                 return NoContent();
             }
             return NotFound();
@@ -105,13 +101,10 @@ public class ToDoItemsController(ToDoItemsContext context) : ControllerBase
     {
         try
         {
-            var itemToDelete = context.ToDoItems.Find(toDoItemId);
-
-            if (itemToDelete != null)
+            var toDoItem = repository.ReadById(toDoItemId);
+            if (toDoItem != null)
             {
-                context.Remove(itemToDelete);
-                context.SaveChanges();
-
+                repository.DeleteById(toDoItemId);
                 return NoContent();
             }
             return NotFound();

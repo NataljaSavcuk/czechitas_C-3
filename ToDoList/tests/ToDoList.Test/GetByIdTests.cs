@@ -2,17 +2,26 @@ namespace ToDoList.Test;
 
 using Microsoft.AspNetCore.Mvc;
 using ToDoList.Domain.Models;
-using ToDoList.Persistence;
-using ToDoList.WebApi.Controllers;
+using ToDoList.Domain.DTO;
+using ToDoList.Persistence.Repository;
+using ToDoList.WebApi;
+using NSubstitute;
+using Xunit;
 
 public class GetByIdTests
 {
+    private readonly IRepository<ToDoItem> repositoryMock;
+    private readonly ToDoItemsController controller;
+
+    public GetByIdTests()
+    {
+        repositoryMock = Substitute.For<IRepository<ToDoItem>>();
+        controller = new ToDoItemsController(repositoryMock);
+    }
     [Fact]
     public void GetById_ValidId_ReturnsItem()
     {
         // Arrange
-        var context = new ToDoItemsContext("Data Source=../../../../../data/localdb.db");
-        var controller = new ToDoItemsController(context);
         var toDoItem = new ToDoItem
         {
             ToDoItemId = 1,
@@ -20,18 +29,18 @@ public class GetByIdTests
             Description = "Popis",
             IsCompleted = false
         };
-        controller.items.Add(toDoItem);
+
+        repositoryMock.ReadById(toDoItem.ToDoItemId).Returns(toDoItem);
 
         // Act
         var result = controller.ReadById(toDoItem.ToDoItemId);
-        var resultResult = result.Result;
-        var value = result.GetValue();
+        var okResult = result.Result as OkObjectResult;
+        var value = okResult?.Value as ToDoItemGetResponseDto;
 
         // Assert
-        Assert.IsType<OkObjectResult>(resultResult);
+        Assert.IsType<OkObjectResult>(okResult);
         Assert.NotNull(value);
 
-        Assert.Equal(toDoItem.ToDoItemId, value.Id);
         Assert.Equal(toDoItem.Description, value.Description);
         Assert.Equal(toDoItem.IsCompleted, value.IsCompleted);
         Assert.Equal(toDoItem.Name, value.Name);
@@ -41,23 +50,14 @@ public class GetByIdTests
     public void GetById_InvalidId_ReturnsNotFound()
     {
         // Arrange
-        var context = new ToDoItemsContext("Data Source=../../../../../data/localdb.db");
-        var controller = new ToDoItemsController(context);
-        var toDoItem = new ToDoItem
-        {
-            ToDoItemId = 1,
-            Name = "Jmeno",
-            Description = "Popis",
-            IsCompleted = false
-        };
-        controller.items.Add(toDoItem);
+        var invalidId = -1;
+        repositoryMock.ReadById(invalidId).Returns((ToDoItem)null);
 
         // Act
-        var invalidId = -1;
         var result = controller.ReadById(invalidId);
-        var resultResult = result.Result;
+        var notFoundResult = result.Result;
 
         // Assert
-        Assert.IsType<NotFoundResult>(resultResult);
+        Assert.IsType<NotFoundResult>(notFoundResult);
     }
 }
