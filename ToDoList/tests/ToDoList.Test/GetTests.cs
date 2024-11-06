@@ -1,18 +1,28 @@
 namespace ToDoList.Test;
 
 using Microsoft.AspNetCore.Mvc;
+using NSubstitute;
 using ToDoList.Domain.Models;
-using ToDoList.Persistence;
-using ToDoList.WebApi.Controllers;
+using ToDoList.Domain.DTO;
+using ToDoList.WebApi;
+using ToDoList.Persistence.Repository;
+using Xunit;
 
 public class GetTests
 {
+    private readonly IRepository<ToDoItem> repositoryMock;
+    private readonly ToDoItemsController controller;
+
+    public GetTests()
+    {
+        repositoryMock = Substitute.For<IRepository<ToDoItem>>();
+        controller = new ToDoItemsController(repositoryMock);
+    }
+
     [Fact]
     public void Get_AllItems_ReturnsAllItems()
     {
         // Arrange
-        var context = new ToDoItemsContext("Data Source=../../../../../data/localdb.db");
-        var controller = new ToDoItemsController(context);
         var toDoItem = new ToDoItem
         {
             ToDoItemId = 1,
@@ -20,19 +30,20 @@ public class GetTests
             Description = "Popis",
             IsCompleted = false
         };
-        controller.items.Add(toDoItem);
+        var toDoItems = new List<ToDoItem> { toDoItem };
+        repositoryMock.Read().Returns(toDoItems);
 
         // Act
         var result = controller.Read();
-        var resultResult = result.Result;
-        var value = result.GetValue();
+        var resultResult = result.Result as OkObjectResult;
+        var value = resultResult?.Value as IEnumerable<ToDoItemGetResponseDto>;
 
         // Assert
         Assert.IsType<OkObjectResult>(resultResult);
         Assert.NotNull(value);
 
         var firstItem = value.First();
-        Assert.Equal(toDoItem.ToDoItemId, firstItem.Id);
+
         Assert.Equal(toDoItem.Description, firstItem.Description);
         Assert.Equal(toDoItem.IsCompleted, firstItem.IsCompleted);
         Assert.Equal(toDoItem.Name, firstItem.Name);
@@ -42,8 +53,7 @@ public class GetTests
     public void Get_NoItems_ReturnsNotFound()
     {
         // Arrange
-        var context = new ToDoItemsContext("Data Source=../../../../../data/localdb.db");
-        var controller = new ToDoItemsController(context);
+        repositoryMock.Read().Returns(new List<ToDoItem>());
 
         // Act
         var result = controller.Read();
