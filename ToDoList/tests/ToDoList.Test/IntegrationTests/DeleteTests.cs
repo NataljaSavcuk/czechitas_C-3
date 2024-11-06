@@ -61,6 +61,7 @@ public class DeleteTests
         Assert.IsType<NotFoundResult>(result);
 
         // Verify that Delete was not called since the item does not exist
-        repositoryMock.DidNotReceive().DeleteById(Arg.Any<int>());
+        repositoryMock.Received(1).ReadById(invalidId);
+        repositoryMock.Received(0).DeleteById(invalidId);
     }
 }

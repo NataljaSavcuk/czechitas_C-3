@@ -1,44 +1,67 @@
-namespace ToDoList.Test.IntegrationTests;
+namespace ToDoList.Test;
 
 using Microsoft.AspNetCore.Mvc;
 using ToDoList.Domain.Models;
-using ToDoList.Persistence;
-using ToDoList.Persistence.Repositories;
-using ToDoList.WebApi.Controllers;
+using ToDoList.Domain.DTO;
+using ToDoList.Persistence.Repository;
+using ToDoList.WebApi;
+using NSubstitute;
+using Xunit;
 
 public class GetTests
 {
+    private readonly IRepository<ToDoItem> repositoryMock;
+    private readonly ToDoItemsController controller;
+
+    public GetTests()
+    {
+        // Set up mock repository
+        repositoryMock = Substitute.For<IRepository<ToDoItem>>();
+        controller = new ToDoItemsController(repositoryMock);
+    }
+
     [Fact]
     public void Get_AllItems_ReturnsAllItems()
     {
         // Arrange
-        var context = new ToDoItemsContext("Data Source=../../../../../data/localdb.db");
-        var repository = new ToDoItemsRepository(context);
-        var controller = new ToDoItemsController(repository);
-
         var toDoItem = new ToDoItem
         {
+            ToDoItemId = 1,
             Name = "Jmeno",
             Description = "Popis",
             IsCompleted = false
         };
-        context.ToDoItems.Add(toDoItem);
-        context.SaveChanges();
+
+        var toDoItems = new List<ToDoItem> { toDoItem };
+        repositoryMock.Read().Returns(toDoItems);
 
         // Act
         var result = controller.Read();
-        var resultResult = result.Result;
-        var value = result.GetValue();
+        var okResult = result.Result as OkObjectResult;
+        var value = okResult?.Value as IEnumerable<ToDoItemGetResponseDto>;
 
         // Assert
-        Assert.IsType<OkObjectResult>(resultResult);
+        Assert.IsType<OkObjectResult>(okResult);
         Assert.NotNull(value);
 
-        var item = value.First(i => i.Id == toDoItem.ToDoItemId);
-        Assert.NotNull(item);
-        Assert.Equal(toDoItem.ToDoItemId, item.Id);
-        Assert.Equal(toDoItem.Description, item.Description);
-        Assert.Equal(toDoItem.IsCompleted, item.IsCompleted);
-        Assert.Equal(toDoItem.Name, item.Name);
+        var firstItem = value.First();
+
+        Assert.Equal(toDoItem.Description, firstItem.Description);
+        Assert.Equal(toDoItem.IsCompleted, firstItem.IsCompleted);
+        Assert.Equal(toDoItem.Name, firstItem.Name);
+    }
+
+    [Fact]
+    public void Get_NoItems_ReturnsNotFound()
+    {
+        // Arrange
+        repositoryMock.Read().Returns(new List<ToDoItem>());
+
+        // Act
+        var result = controller.Read();
+        var notFoundResult = result.Result;
+
+        // Assert
+        Assert.IsType<NotFoundResult>(notFoundResult);
     }
 }
