@@ -84,7 +84,7 @@ public class ToDoItemsController(IRepository<ToDoItem> repository) : ControllerB
                 currentToDoItem.Description = request.Description ?? currentToDoItem.Description;
                 currentToDoItem.IsCompleted = request.IsCompleted;
 
-                repository.UpdateById(currentToDoItem);
+                repository.Update(currentToDoItem);
                 return NoContent();
             }
             return NotFound();

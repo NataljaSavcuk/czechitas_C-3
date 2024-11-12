@@ -8,7 +8,7 @@ public interface IRepository<T> where T : class
 
     T ReadById(int id);
 
-    void UpdateById(T item);
+    void Update(T item);
 
     void DeleteById(int id);
 

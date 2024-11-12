@@ -21,7 +21,7 @@ public class ToDoItemRepository : IRepository<ToDoItem>
 
     public ToDoItem ReadById(int id) => context.ToDoItems.Find(id);
 
-    public void UpdateById(ToDoItem item)
+    public void Update(ToDoItem item)
     {
         context.ToDoItems.Update(item);
         context.SaveChanges();
