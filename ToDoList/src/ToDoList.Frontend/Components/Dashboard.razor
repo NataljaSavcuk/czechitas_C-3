@@ -1,0 +1,99 @@
+@rendermode InteractiveServer
+
+
+
+
+<button class="btn btn-primary btn-sm" @onclick="OrderById">Sort by ID</button>
+<button class="btn btn-primary btn-sm" @onclick="OrderByName">Sort by name</button>
+<table>
+    <tr>
+        <th style="width: 20%;">ID</th>
+        <th>NAME</th>
+        <th>IS COMPLETED</th>
+    </tr>
+
+    @foreach (var toDoItem in @displaiedListOfItems)
+    {
+                            <tr>
+                                <td>@toDoItem.ToDoItemId</td>
+                                <td style=" text-align: left; padding-left: 1rem;">@toDoItem.Name</td>
+                                <td>
+                                    <input class="form-check-input" type="checkbox" checked="@toDoItem.IsCompleted" disabled />
+                                </td>
+                            </tr>
+    }
+</table>
+
+
+
+
+<style>
+    table,
+    th,
+    td {
+        border: 1px solid;
+    }
+
+    th {
+        background-color: purple;
+        color: beige;
+    }
+
+    table {
+        width: 50%;
+        border-collapse: collapse;
+        text-align: center;
+        background-color: rgb(169, 228, 137);
+    }
+</style>
+
+
+
+@code
+{
+    private static List<ToDoItemView> toDoItems = new List<ToDoItemView> {
+new ToDoItemView() {ToDoItemId = 1, Name = "Udelat ukol na Czechitas", IsCompleted = true},
+new ToDoItemView() {ToDoItemId = 2, Name = "Udelat nepovinny ukol na Czechitas", IsCompleted = false},
+new ToDoItemView() {ToDoItemId = 3, Name = "AAA (just a test)", IsCompleted = false},
+new ToDoItemView() {ToDoItemId = 4, Name = "BBB (just another test)", IsCompleted = true}
+
+};
+
+    public class ToDoItemView
+    {
+        public int ToDoItemId { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public bool IsCompleted { get; set; }
+    }
+
+    private static List<ToDoItemView> sortedByIdItems = toDoItems.OrderBy(item => item.ToDoItemId).ToList();
+    private static List<ToDoItemView> sortedByIdItemsDesc = toDoItems.OrderByDescending(item => item.ToDoItemId).ToList();
+    private static List<ToDoItemView> sortedByNameItems = toDoItems.OrderBy(item => item.Name).ToList();
+    private static List<ToDoItemView> sortedByNameItemsDesc = toDoItems.OrderByDescending(item => item.Name).ToList();
+
+    public static List<ToDoItemView> displaiedListOfItems = sortedByIdItems;
+
+    public void OrderById()
+    {
+        if (displaiedListOfItems == sortedByIdItems)
+        {
+            displaiedListOfItems = sortedByIdItemsDesc;
+        }
+        else
+        {
+            displaiedListOfItems = sortedByIdItems;
+        }
+    }
+    public void OrderByName()
+    {
+        if (displaiedListOfItems == sortedByNameItems)
+        {
+            displaiedListOfItems = sortedByNameItemsDesc;
+        }
+        else
+        {
+            displaiedListOfItems = sortedByNameItems;
+        }
+    }
+}
