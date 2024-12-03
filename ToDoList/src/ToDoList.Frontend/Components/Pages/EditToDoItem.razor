@@ -1,0 +1,59 @@
+@page "/editToDoItem/{ItemId:int}"
+@using ToDoList.Frontend.Views
+@using ToDoList.Frontend.Clients
+@inject NavigationManager NavigationManager
+@inject IToDoItemsClient ToDoItemClient
+@rendermode InteractiveServer
+
+
+
+
+<PageTitle>Edit To Do Item</PageTitle>
+
+@if (ToDoItem is not null)
+{
+    <EditForm Model="ToDoItem" FormName="EditToDoItem" OnSubmit="Submit">
+
+        <div class="form-group">
+            <label for="Name">Name</label>
+            <InputText class="form-control" id="Name" @bind-Value="ToDoItem.Name" />
+            <br>
+        </div>
+        <div class="form-group">
+            <label for="Description">Description</label>
+            <InputText class="form-control" id="Description" @bind-Value="ToDoItem.Description" />
+            <br>
+        </div>
+        <div class="form-group">
+            <label for="IsCompleted">Is Completed</label>
+            <InputCheckbox id="IsCompleted" @bind-Value="ToDoItem.IsCompleted" />
+            <br>
+        </div>
+        <br>
+
+        <button class="btn btn-success" type="submit">Submit</button>
+
+    </EditForm>
+}
+
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        ToDoItem = await ToDoItemClient.ReadItemByIdAsync(ItemId);
+    }
+
+
+    [Parameter]
+    public int ItemId { get; set; }
+
+    [SupplyParameterFromForm]
+    public ToDoItemView ToDoItem { get; set; }
+
+    public async Task Submit()
+    {
+        await ToDoItemClient.UpdateItemAsync(ToDoItem);
+        NavigationManager.NavigateTo("/");
+
+    }
+}
