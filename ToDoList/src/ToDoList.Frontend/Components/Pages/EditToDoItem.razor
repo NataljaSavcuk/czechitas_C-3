@@ -1,38 +1,46 @@
 @page "/editToDoItem/{ItemId:int}"
 @using ToDoList.Frontend.Views
 @using ToDoList.Frontend.Clients
+@using ToDoList.Domain.Types
 @inject NavigationManager NavigationManager
 @inject IToDoItemsClient ToDoItemClient
 @rendermode InteractiveServer
 
 
-
-
 <PageTitle>Edit To Do Item</PageTitle>
+
 
 @if (ToDoItem is not null)
 {
-    <EditForm Model="ToDoItem" FormName="EditToDoItem" OnSubmit="Submit">
+    <EditForm Model="ToDoItem" FormName="EditToDoItem" OnValidSubmit="Submit">
+        <DataAnnotationsValidator />
 
-        <div class="form-group">
-            <label for="Name">Name</label>
-            <InputText class="form-control" id="Name" @bind-Value="ToDoItem.Name" />
-            <br>
-        </div>
-        <div class="form-group">
-            <label for="Description">Description</label>
-            <InputText class="form-control" id="Description" @bind-Value="ToDoItem.Description" />
-            <br>
-        </div>
-        <div class="form-group">
-            <label for="IsCompleted">Is Completed</label>
-            <InputCheckbox id="IsCompleted" @bind-Value="ToDoItem.IsCompleted" />
-            <br>
-        </div>
-        <br>
+        <label for="Category" class="form-label">Category:</label>
+        <InputText id="Category" class="form-control" @bind-Value="ToDoItem.Category" />
+        <ValidationMessage For="() => ToDoItem.Category" />
 
-        <button class="btn btn-success" type="submit">Submit</button>
+        <label for="TaskPriority" class="form-label">Priority:</label>
+        <InputSelect id="TaskPriority" class="form-control" @bind-Value="ToDoItem.TaskPriority">
+            @foreach (var priority in Enum.GetValues<Priority>())
+            {
+                <option value="@priority">@priority</option>
+            }
+        </InputSelect>
+        <ValidationMessage For="() => ToDoItem.TaskPriority" />
 
+        <label for="Name" class="form-label">Name:</label>
+        <InputText id="Name" class="form-control" @bind-Value="ToDoItem.Name" />
+        <ValidationMessage For="() => ToDoItem.Name" />
+
+        <label for="Description" class="form-label">Description:</label>
+        <InputText id="Description" class="form-control" @bind-Value="ToDoItem.Description" />
+        <ValidationMessage For="() => ToDoItem.Description" />
+
+        <label for="IsCompleted" class="form-check-label">IsCompleted:</label>
+        <InputCheckbox id="IsCompleted" class="form-check" @bind-Value="ToDoItem.IsCompleted" />
+        <ValidationMessage For="() => ToDoItem.IsCompleted" />
+
+        <button type="submit">Submit</button>
     </EditForm>
 }
 
@@ -41,8 +49,20 @@
     protected override async Task OnInitializedAsync()
     {
         ToDoItem = await ToDoItemClient.ReadItemByIdAsync(ItemId);
-    }
 
+        if (ToDoItem == null)
+        {
+            ToDoItem = new ToDoItemView();
+        }
+        SubmitDelegate += LogSubmit;
+    }
+    public delegate void ToDoItemViewProcessingDelegate(ToDoItemView toDoItemView);
+    private ToDoItemViewProcessingDelegate SubmitDelegate;
+
+    private void LogSubmit(ToDoItemView toDoItemView)
+    {
+        Console.WriteLine($"ToDoItem with ID={toDoItemView.ToDoItemId} was submitted.");
+    }
 
     [Parameter]
     public int ItemId { get; set; }
@@ -52,8 +72,9 @@
 
     public async Task Submit()
     {
+        SubmitDelegate?.Invoke(ToDoItem);
+
         await ToDoItemClient.UpdateItemAsync(ToDoItem);
         NavigationManager.NavigateTo("/");
-
     }
 }

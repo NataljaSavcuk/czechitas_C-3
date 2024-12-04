@@ -8,7 +8,7 @@ public record ToDoItemUpdateRequestDto(
     string Name,
     string Description,
     bool IsCompleted,
-    string Category,
+    string? Category,
     Priority TaskPriority
     )
 {
