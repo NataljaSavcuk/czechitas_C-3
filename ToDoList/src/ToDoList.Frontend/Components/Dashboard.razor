@@ -1,99 +1,180 @@
+@using ToDoList.Frontend.Views
+@using ToDoList.Frontend.Clients
+@using ToDoList.Frontend.Components.Assets
+@using ToDoList.Domain.Types
+@inject IToDoItemsClient ToDoItemsClient
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
 @rendermode InteractiveServer
 
+<h1>TO-DO LIST</h1>
+<button class="btn btn-info">Add new task</button>
 
+@if (displaiedListOfItems is null)
+{
+    <p>Loading...</p>
+}
+@if (displaiedListOfItems != null)
+{
+    <table class="table table-hover">
+        <thead class="table-dark" style="text-align: center;">
+            <tr>
+                <th style="width: 15%;">PRIORITY</th>
+                <th style="width: 10%;">CATEGORY</th>
+                <th>
+                    YOUR TASKS
+                    <SortIcon Width="15px" Tooltip="Sort by task name" OnClick="OrderByName" />
+                </th>
+                <th style="width: 20%;">IS COMPLETED
+                    <SortIcon Width="15px" Tooltip="Sort by done" OnClick="OrderByDone" />
+                </th>
+                <th style="width: 10%;">ACTIONS</th>
+            </tr>
+        </thead>
+        <tbody class="table-secondary" style="text-align: center;">
+            @foreach (var toDoItem in displaiedListOfItems)
+            {
+                <tr class="@(toDoItem.IsCompleted ? "table-secondary table-success" : "table-secondary")">
+                    <td>@PriorityBadges(toDoItem.TaskPriority)</td>
+                    <td>@toDoItem.Category</td>
+                    <td style=" text-align: left; padding-left: 5rem;">
+                        <h5>@toDoItem.Name</h5>
+                        <p>@toDoItem.Description</p>
+                    </td>
+                    <td>
+                        <input class="form-check-input" type="checkbox" checked="@toDoItem.IsCompleted"
+                            @onchange="() => OnChangeIsDone(toDoItem)" />
+                    </td>
+                    <td>
+                        <EditIcon Width=1rem; OnClick="() => EditItem(toDoItem)" Tooltip="Edit" />
+                        <DeleteIcon Width="1rem" Tooltip="Delete Item" DataBsToggle="modal" DataBsTarget="#deleteModal"
+                            OnClick="() => SetSelectedToDoItem(toDoItem)" />
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
 
-
-<button class="btn btn-primary btn-sm" @onclick="OrderById">Sort by ID</button>
-<button class="btn btn-primary btn-sm" @onclick="OrderByName">Sort by name</button>
-<table>
-    <tr>
-        <th style="width: 20%;">ID</th>
-        <th>NAME</th>
-        <th>IS COMPLETED</th>
-    </tr>
-
-    @foreach (var toDoItem in @displaiedListOfItems)
-    {
-                            <tr>
-                                <td>@toDoItem.ToDoItemId</td>
-                                <td style=" text-align: left; padding-left: 1rem;">@toDoItem.Name</td>
-                                <td>
-                                    <input class="form-check-input" type="checkbox" checked="@toDoItem.IsCompleted" disabled />
-                                </td>
-                            </tr>
-    }
-</table>
-
-
-
+<!-- deleteModal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete <strong>@SelectedToDoItem?.Name</strong>?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" @onclick="ConfirmDeletion"
+                    data-bs-dismiss="modal">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <style>
-    table,
-    th,
-    td {
-        border: 1px solid;
-    }
-
-    th {
-        background-color: purple;
-        color: beige;
-    }
-
-    table {
-        width: 50%;
-        border-collapse: collapse;
-        text-align: center;
-        background-color: rgb(169, 228, 137);
+    p {
+        font-style: italic;
     }
 </style>
 
-
-
 @code
 {
-    private static List<ToDoItemView> toDoItems = new List<ToDoItemView> {
-new ToDoItemView() {ToDoItemId = 1, Name = "Udelat ukol na Czechitas", IsCompleted = true},
-new ToDoItemView() {ToDoItemId = 2, Name = "Udelat nepovinny ukol na Czechitas", IsCompleted = false},
-new ToDoItemView() {ToDoItemId = 3, Name = "AAA (just a test)", IsCompleted = false},
-new ToDoItemView() {ToDoItemId = 4, Name = "BBB (just another test)", IsCompleted = true}
+    private ToDoItemView? SelectedToDoItem { get; set; }
 
-};
+    private List<ToDoItemView>? toDoItems;
+    private List<ToDoItemView> sortedByDoneItems = new();
+    private List<ToDoItemView> sortedByDoneItemsDesc = new();
+    private List<ToDoItemView> sortedByNameItems = new();
+    private List<ToDoItemView> sortedByNameItemsDesc = new();
+    public List<ToDoItemView> displaiedListOfItems = new();
 
-    public class ToDoItemView
+    protected override async Task OnInitializedAsync()
     {
-        public int ToDoItemId { get; set; }
-        public string Name { get; set; }
-        public string Description { get; set; }
-        public bool IsCompleted { get; set; }
+        toDoItems = await ToDoItemsClient.ReadItemsAsync();
+        InitializeSortedLists();
     }
 
-    private static List<ToDoItemView> sortedByIdItems = toDoItems.OrderBy(item => item.ToDoItemId).ToList();
-    private static List<ToDoItemView> sortedByIdItemsDesc = toDoItems.OrderByDescending(item => item.ToDoItemId).ToList();
-    private static List<ToDoItemView> sortedByNameItems = toDoItems.OrderBy(item => item.Name).ToList();
-    private static List<ToDoItemView> sortedByNameItemsDesc = toDoItems.OrderByDescending(item => item.Name).ToList();
-
-    public static List<ToDoItemView> displaiedListOfItems = sortedByIdItems;
-
-    public void OrderById()
+    private void InitializeSortedLists()
     {
-        if (displaiedListOfItems == sortedByIdItems)
-        {
-            displaiedListOfItems = sortedByIdItemsDesc;
-        }
-        else
-        {
-            displaiedListOfItems = sortedByIdItems;
-        }
+        sortedByDoneItems = toDoItems.OrderBy(item => item.IsCompleted).ToList();
+        sortedByDoneItemsDesc = toDoItems.OrderByDescending(item => item.IsCompleted).ToList();
+
+        sortedByNameItems = toDoItems.OrderBy(item => item.Name).ToList();
+        sortedByNameItemsDesc = toDoItems.OrderByDescending(item => item.Name).ToList();
+
+        displaiedListOfItems = sortedByNameItems;
     }
+
+    public void OrderByDone()
+    {
+        displaiedListOfItems = displaiedListOfItems == sortedByDoneItems
+        ? sortedByDoneItemsDesc
+        : sortedByDoneItems;
+    }
+
     public void OrderByName()
     {
-        if (displaiedListOfItems == sortedByNameItems)
+        displaiedListOfItems = displaiedListOfItems == sortedByNameItems
+        ? sortedByNameItemsDesc
+        : sortedByNameItems;
+    }
+
+    public void EditItem(ToDoItemView toDoItem)
+    {
+        NavigationManager.NavigateTo($"editToDoItem/{toDoItem.ToDoItemId}");
+    }
+
+    private void SetSelectedToDoItem(ToDoItemView toDoItem)
+    {
+        SelectedToDoItem = toDoItem;
+    }
+
+    private async Task ConfirmDeletion()
+    {
+        if (SelectedToDoItem != null)
         {
-            displaiedListOfItems = sortedByNameItemsDesc;
+            await ToDoItemsClient.DeleteItemAsync(SelectedToDoItem);
+            displaiedListOfItems.Remove(SelectedToDoItem);
+            SelectedToDoItem = null;
         }
-        else
+    }
+    public async Task DeleteItem(ToDoItemView toDoItem)
+    {
+        await ToDoItemsClient.DeleteItemAsync(toDoItem);
+    }
+
+    public MarkupString PriorityBadges(Priority priority)
+    {
+        return priority switch
         {
-            displaiedListOfItems = sortedByNameItems;
-        }
+            Priority.Low => (MarkupString)"<span class=\"badge rounded-pill bg-info\">Low</span>",
+            Priority.Medium => (MarkupString)"<span class=\"badge rounded-pill bg-warning text-dark\">Medium</span>",
+            Priority.High => (MarkupString)"<span class=\"badge rounded-pill bg-danger\">High</span>",
+            Priority.Critical => (MarkupString)"<span class=\"badge rounded-pill bg-dark\">Critical</span>",
+            _ => (MarkupString)""
+        };
+    }
+
+    public async Task OnChangeIsDone(ToDoItemView request)
+    {
+        var updatedToDoItem = new ToDoItemView
+            {
+                ToDoItemId = request.ToDoItemId,
+                Name = request.Name,
+                Description = request.Description,
+                Category = request.Category,
+                TaskPriority = request.TaskPriority,
+                IsCompleted = !request.IsCompleted
+            };
+        await ToDoItemsClient.UpdateItemAsync(updatedToDoItem);
+        toDoItems = await ToDoItemsClient.ReadItemsAsync();
+        InitializeSortedLists();
     }
 }

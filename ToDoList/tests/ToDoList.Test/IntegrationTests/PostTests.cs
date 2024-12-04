@@ -22,11 +22,7 @@ public class PostTests
     public void Post_CreateValidRequest_ReturnsCreatedAtAction()
     {
         // Arrange
-        var request = new ToDoItemCreateRequestDto(
-            Name: "Jmeno",
-            Description: "Popis",
-            IsCompleted: false
-        );
+        var request = new ToDoItemCreateRequestDto("Jmeno", "Popis", false, "test", Domain.Types.Priority.Low);
 
         var toDoItem = new ToDoItem
         {
@@ -67,11 +63,7 @@ public class PostTests
     public void Post_CreateUnhandledException_ReturnsInternalServerError()
     {
         // Arrange
-        var request = new ToDoItemCreateRequestDto(
-            Name: "Jmeno",
-            Description: "Popis",
-            IsCompleted: false
-        );
+        var request = new ToDoItemCreateRequestDto("Jmeno", "Popis", false, "test", Domain.Types.Priority.Low);
 
         repositoryMock.When(r => r.Create(Arg.Any<ToDoItem>()))
                         .Do(call => throw new Exception("Chyba prihlaseni do databaze"));

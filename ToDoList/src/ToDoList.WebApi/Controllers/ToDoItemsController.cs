@@ -83,6 +83,8 @@ public class ToDoItemsController(IRepository<ToDoItem> repository) : ControllerB
                 currentToDoItem.Name = request.Name ?? currentToDoItem.Name;
                 currentToDoItem.Description = request.Description ?? currentToDoItem.Description;
                 currentToDoItem.IsCompleted = request.IsCompleted;
+                currentToDoItem.Category = request.Category ?? currentToDoItem.Category;
+                currentToDoItem.TaskPriority = request.TaskPriority;
 
                 repository.Update(currentToDoItem);
                 return NoContent();

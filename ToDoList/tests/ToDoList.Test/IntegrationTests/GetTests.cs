@@ -29,7 +29,9 @@ public class GetTests
             ToDoItemId = 1,
             Name = "Jmeno",
             Description = "Popis",
-            IsCompleted = false
+            IsCompleted = false,
+            Category = "test",
+            TaskPriority = Domain.Types.Priority.Low
         };
 
         var toDoItems = new List<ToDoItem> { toDoItem };

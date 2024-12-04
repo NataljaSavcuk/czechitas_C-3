@@ -29,16 +29,16 @@ public class PutTests
             ToDoItemId = 1,
             Name = "Jmeno",
             Description = "Popis",
-            IsCompleted = false
+            IsCompleted = false,
+            Category = "test",
+            TaskPriority = Domain.Types.Priority.Low
+
         };
 
         repositoryMock.ReadById(toDoItem.ToDoItemId).Returns(toDoItem);
 
-        var request = new ToDoItemUpdateRequestDto(
-            Name: "Jine jmeno",
-            Description: "Jiny popis",
-            IsCompleted: true
-        );
+        var request = new ToDoItemUpdateRequestDto("Jine jmeno", "Jiny popis", true, "new test", Domain.Types.Priority.Critical);
+
 
         // Act
         var result = controller.UpdateById(toDoItem.ToDoItemId, request);
@@ -61,11 +61,8 @@ public class PutTests
 
         repositoryMock.ReadById(invalidId).Returns((ToDoItem)null);
 
-        var request = new ToDoItemUpdateRequestDto(
-            Name: "Jine jmeno",
-            Description: "Jiny popis",
-            IsCompleted: true
-        );
+        var request = new ToDoItemUpdateRequestDto("Jine jmeno", "iny popis", true, "new test", Domain.Types.Priority.Critical);
+
 
         // Act
         var result = controller.UpdateById(invalidId, request);
@@ -80,11 +77,8 @@ public class PutTests
     {
         // Arrange
         var toDoItemId = 1;
-        var request = new ToDoItemUpdateRequestDto(
-            Name: "Jine jmeno",
-            Description: "Jiny popis",
-            IsCompleted: true
-        );
+        var request = new ToDoItemUpdateRequestDto("Jine jmeno", "iny popis", true, "new test", Domain.Types.Priority.Critical);
+
         repositoryMock.When(r => r.ReadById(toDoItemId))
                   .Do(call => throw new Exception("Chyba prihlaseni do databaze"));
 
