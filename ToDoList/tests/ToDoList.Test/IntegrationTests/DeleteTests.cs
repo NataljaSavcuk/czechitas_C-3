@@ -29,7 +29,9 @@ public class DeleteTests
             ToDoItemId = toDoItemId,
             Name = "Jmeno",
             Description = "Popis",
-            IsCompleted = false
+            IsCompleted = false,
+            Category = "test",
+            TaskPriority = Domain.Types.Priority.Low
         };
 
         repositoryMock.ReadById(toDoItemId).Returns(toDoItem);

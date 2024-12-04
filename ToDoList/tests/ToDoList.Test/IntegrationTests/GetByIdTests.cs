@@ -28,7 +28,9 @@ public class GetByIdTests
             ToDoItemId = 1,
             Name = "Jmeno",
             Description = "Popis",
-            IsCompleted = false
+            IsCompleted = false,
+            Category = "test",
+            TaskPriority = Domain.Types.Priority.Low
         };
 
         repositoryMock.ReadById(toDoItem.ToDoItemId).Returns(toDoItem);
