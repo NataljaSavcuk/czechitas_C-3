@@ -21,7 +21,7 @@
 
         <label for="TaskPriority" class="form-label">Priority:</label>
         <InputSelect id="TaskPriority" class="form-control" @bind-Value="ToDoItem.TaskPriority">
-            @foreach (var priority in Enum.GetValues<Priority>())
+            @foreach (var priority in Enum.GetValues<Priority>().Cast<Priority>().Where(p => p != Priority.Unknown))
             {
                 <option value="@priority">@priority</option>
             }
@@ -48,16 +48,11 @@
 @code {
     protected override async Task OnInitializedAsync()
     {
-        ToDoItem = await ToDoItemClient.ReadItemByIdAsync(ItemId);
-
-        if (ToDoItem == null)
-        {
-            ToDoItem = new ToDoItemView();
-        }
+        ToDoItem = await ToDoItemClient.ReadItemByIdAsync(ItemId) ?? new ToDoItemView();
         SubmitDelegate += LogSubmit;
     }
     public delegate void ToDoItemViewProcessingDelegate(ToDoItemView toDoItemView);
-    private ToDoItemViewProcessingDelegate SubmitDelegate;
+    private ToDoItemViewProcessingDelegate? SubmitDelegate;
 
     private void LogSubmit(ToDoItemView toDoItemView)
     {
@@ -68,13 +63,16 @@
     public int ItemId { get; set; }
 
     [SupplyParameterFromForm]
-    public ToDoItemView ToDoItem { get; set; }
+    public ToDoItemView? ToDoItem { get; set; }
 
     public async Task Submit()
     {
-        SubmitDelegate?.Invoke(ToDoItem);
+        if (ToDoItem != null)
+        {
+            SubmitDelegate?.Invoke(ToDoItem);
 
-        await ToDoItemClient.UpdateItemAsync(ToDoItem);
-        NavigationManager.NavigateTo("/");
+            await ToDoItemClient.UpdateItemAsync(ToDoItem);
+            NavigationManager.NavigateTo("/");
+        }
     }
 }

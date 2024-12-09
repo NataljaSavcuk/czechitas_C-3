@@ -71,6 +71,8 @@ public class ToDoItemsClient(HttpClient httpClient) : IToDoItemsClient
                 Name = response.Name,
                 Description = response.Description,
                 IsCompleted = response.IsCompleted,
+                Category = response.Category,
+                TaskPriority = response.TaskPriority
             };
         }
         catch (Exception e)

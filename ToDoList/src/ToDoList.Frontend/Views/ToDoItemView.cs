@@ -9,15 +9,16 @@ public class ToDoItemView
 
     [Required(ErrorMessage = "Name is mandatory.")]
     [Length(3, 50)]
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Description is mandatory.")]
     [StringLength(250)]
-    public string Description { get; set; }
+    public string Description { get; set; } = string.Empty;
 
     public bool IsCompleted { get; set; }
 
-    public string Category { get; set; }
+    [StringLength(50)]
+    public string Category { get; set; } = string.Empty;
 
     public Priority TaskPriority { get; set; }
 }

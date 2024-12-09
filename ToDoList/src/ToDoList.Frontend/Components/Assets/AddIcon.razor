@@ -1,5 +1,14 @@
-﻿<h3>AddIcon</h3>
+﻿@code {
+    [Parameter]
+    public string Width { get; set; } = "20";
 
-@code {
-
+    [Parameter]
+    public string Height { get; set; } = "20";
 }
+
+<div
+    style="display: inline-flex; width:@Width; height:@Height; border-radius: 50%; align-items: center; justify-content: center; cursor: pointer;">
+    <svg fill="white" viewBox="0 0 1920 1920" xmlns="http://www.w3.org/2000/svg">
+        <path d="M840 0v840H0v240h840v840h240v-840h840V840h-840V0z" fill-rule="evenodd" />
+    </svg>
+</div>
