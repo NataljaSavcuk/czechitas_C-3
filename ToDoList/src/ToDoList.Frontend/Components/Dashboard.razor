@@ -8,8 +8,14 @@
 
 @rendermode InteractiveServer
 
-<h1>TO-DO LIST</h1>
-<button class="btn btn-info">Add new task</button>
+<h1 style="color: white; text-align: center;">TO-DO LIST</h1>
+<br>
+<div class="container">
+    <button class="btn btn-success" @onclick="AddNewItem">
+        <AddIcon Width=0.8rem; /> Add new task
+    </button>
+</div>
+<br>
 
 @if (displaiedListOfItems is null)
 {
@@ -20,22 +26,26 @@
     <table class="table table-hover">
         <thead class="table-dark" style="text-align: center;">
             <tr>
-                <th style="width: 15%;">PRIORITY</th>
-                <th style="width: 10%;">CATEGORY</th>
+                <th style="width: 15%;">PRIORITY
+                    <SortIcon Width="15px" Tooltip="Sort by task priority" OnClick="SortByPriority" />
+                </th>
+                <th style="width: 10%;">CATEGORY
+                    <SortIcon Width="15px" Tooltip="Sort by task category" OnClick="SortByCategory" />
+                </th>
                 <th>
                     YOUR TASKS
-                    <SortIcon Width="15px" Tooltip="Sort by task name" OnClick="OrderByName" />
+                    <SortIcon Width="15px" Tooltip="Sort by task name" OnClick="SortByName" />
                 </th>
                 <th style="width: 20%;">IS COMPLETED
-                    <SortIcon Width="15px" Tooltip="Sort by done" OnClick="OrderByDone" />
+                    <SortIcon Width="15px" Tooltip="Sort by done" OnClick="SortByDone" />
                 </th>
                 <th style="width: 10%;">ACTIONS</th>
             </tr>
         </thead>
-        <tbody class="table-secondary" style="text-align: center;">
+        <tbody style="text-align: center;">
             @foreach (var toDoItem in displaiedListOfItems)
             {
-                <tr class="@(toDoItem.IsCompleted ? "table-secondary table-success" : "table-secondary")">
+                <tr class="@(toDoItem.IsCompleted ? "table-success" : "table-secondary")">
                     <td>@PriorityBadges(toDoItem.TaskPriority)</td>
                     <td>@toDoItem.Category</td>
                     <td style=" text-align: left; padding-left: 5rem;">
@@ -44,7 +54,7 @@
                     </td>
                     <td>
                         <input class="form-check-input" type="checkbox" checked="@toDoItem.IsCompleted"
-                            @onchange="() => OnChangeIsDone(toDoItem)" />
+                            style="background-color: blueviolet;" @onchange="() => OnChangeIsDone(toDoItem)" />
                     </td>
                     <td>
                         <EditIcon Width=1rem; OnClick="() => EditItem(toDoItem)" Tooltip="Edit" />
@@ -82,48 +92,89 @@
     p {
         font-style: italic;
     }
+
+    .table-success {
+        background-color: #28a745 !important;
+        border: 2px solid #1e7e34 !important;
+    }
+
+    .table-secondary {
+        background-color: #545b62 !important;
+        border: 2px solid #545b62 !important;
+    }
+
+    tr.table-success:hover,
+    tr.table-secondary:hover {
+        opacity: 1;
+        transform: scale(1.02);
 </style>
 
 @code
 {
     private ToDoItemView? SelectedToDoItem { get; set; }
-
     private List<ToDoItemView>? toDoItems;
-    private List<ToDoItemView> sortedByDoneItems = new();
-    private List<ToDoItemView> sortedByDoneItemsDesc = new();
-    private List<ToDoItemView> sortedByNameItems = new();
-    private List<ToDoItemView> sortedByNameItemsDesc = new();
     public List<ToDoItemView> displaiedListOfItems = new();
+    public void SortByDone() => ToggleSort("Done");
+    public void SortByName() => ToggleSort("Name");
+    public void SortByCategory() => ToggleSort("Category");
+    public void SortByPriority() => ToggleSort("Priority");
 
     protected override async Task OnInitializedAsync()
     {
         toDoItems = await ToDoItemsClient.ReadItemsAsync();
-        InitializeSortedLists();
+        InitializeSortingLists();
+        displaiedListOfItems = toDoItems.OrderBy(item => item.Name).ToList();
+    }
+    private Dictionary<string, (List<ToDoItemView> Asc, List<ToDoItemView> Desc)> sortingLists;
+    private string currentSort = "Name";
+    private bool isAscending = true;
+
+    private void InitializeSortingLists()
+    {
+        sortingLists = new Dictionary<string, (List<ToDoItemView>, List<ToDoItemView>)>
+            {
+                ["Done"] = (
+            toDoItems.OrderBy(item => item.IsCompleted).ToList(),
+            toDoItems.OrderByDescending(item => item.IsCompleted).ToList()
+            ),
+                ["Name"] = (
+            toDoItems.OrderBy(item => item.Name).ToList(),
+            toDoItems.OrderByDescending(item => item.Name).ToList()
+            ),
+                ["Category"] = (
+            toDoItems.OrderBy(item => item.Category).ToList(),
+            toDoItems.OrderByDescending(item => item.Category).ToList()
+            ),
+                ["Priority"] = (
+            toDoItems.OrderBy(item => item.TaskPriority).ToList(),
+            toDoItems.OrderByDescending(item => item.TaskPriority).ToList()
+            )
+            };
     }
 
-    private void InitializeSortedLists()
+    public void ToggleSort(string sortKey)
     {
-        sortedByDoneItems = toDoItems.OrderBy(item => item.IsCompleted).ToList();
-        sortedByDoneItemsDesc = toDoItems.OrderByDescending(item => item.IsCompleted).ToList();
+        if (!sortingLists.ContainsKey(sortKey)) return;
 
-        sortedByNameItems = toDoItems.OrderBy(item => item.Name).ToList();
-        sortedByNameItemsDesc = toDoItems.OrderByDescending(item => item.Name).ToList();
+        // Toggle sort direction if already sorting by this key
+        if (currentSort == sortKey)
+        {
+            isAscending = !isAscending;
+        }
+        else
+        {
+            currentSort = sortKey;
+            isAscending = true;
+        }
 
-        displaiedListOfItems = sortedByNameItems;
+        displaiedListOfItems = isAscending
+        ? sortingLists[sortKey].Asc
+        : sortingLists[sortKey].Desc;
     }
 
-    public void OrderByDone()
+    public void AddNewItem()
     {
-        displaiedListOfItems = displaiedListOfItems == sortedByDoneItems
-        ? sortedByDoneItemsDesc
-        : sortedByDoneItems;
-    }
-
-    public void OrderByName()
-    {
-        displaiedListOfItems = displaiedListOfItems == sortedByNameItems
-        ? sortedByNameItemsDesc
-        : sortedByNameItems;
+        NavigationManager.NavigateTo("addNewItem/");
     }
 
     public void EditItem(ToDoItemView toDoItem)
@@ -175,6 +226,6 @@
             };
         await ToDoItemsClient.UpdateItemAsync(updatedToDoItem);
         toDoItems = await ToDoItemsClient.ReadItemsAsync();
-        InitializeSortedLists();
+        InitializeSortingLists();
     }
 }

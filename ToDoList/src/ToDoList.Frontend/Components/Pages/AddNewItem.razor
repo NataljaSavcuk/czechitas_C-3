@@ -1,0 +1,64 @@
+﻿@page "/addNewItem"
+@using ToDoList.Frontend.Views
+@using ToDoList.Frontend.Clients
+@using ToDoList.Domain.Types
+@inject NavigationManager NavigationManager
+@inject IToDoItemsClient ToDoItemClient
+@rendermode InteractiveServer
+
+<PageTitle>Add To-Do Item</PageTitle>
+
+<h3>Add To-Do Item</h3>
+
+@if (NewItem is not null)
+{
+    <EditForm Model="NewItem" OnValidSubmit="Submit">
+        <DataAnnotationsValidator />
+
+        <label for="Name" class="form-label">Name:</label>
+        <InputText id="Name" class="form-control" @bind-Value="NewItem.Name" />
+        <ValidationMessage For="() => NewItem.Name" />
+
+        <label for="Description" class="form-label">Description:</label>
+        <InputText id="Description" class="form-control" @bind-Value="NewItem.Description" />
+        <ValidationMessage For="() => NewItem.Description" />
+        <label for="Category" class="form-label">Category:</label>
+        <InputText id="Category" class="form-control" @bind-Value="NewItem.Category" />
+        <ValidationMessage For="() => NewItem.Category" />
+
+        <label for="TaskPriority" class="form-label">Priority:</label>
+        <InputSelect id="TaskPriority" class="form-control" @bind-Value="NewItem.TaskPriority">
+            @foreach (var priority in Enum.GetValues<Priority>().Cast<Priority>().Where(p => p != Priority.Unknown))
+            {
+                <option value="@priority">@priority</option>
+            }
+        </InputSelect>
+        <ValidationMessage For="() => NewItem.TaskPriority" />
+
+        <label for="IsCompleted" class="form-check-label">IsCompleted:</label>
+        <InputCheckbox id="IsCompleted" class="form-check" @bind-Value="NewItem.IsCompleted" />
+        <ValidationMessage For="() => NewItem.IsCompleted" />
+
+        <button type="submit" class="btn btn-primary">Add Item</button>
+    </EditForm>
+}
+<style>
+    body {
+        background-color: aqua;
+    }
+</style>
+
+@code {
+    private ToDoItemView NewItem { get; set; }
+
+    protected override void OnInitialized()
+    {
+        NewItem = new ToDoItemView();
+    }
+
+    private async Task Submit()
+    {
+        await ToDoItemClient.CreateItemAsync(NewItem);
+        NavigationManager.NavigateTo("/");
+    }
+}
