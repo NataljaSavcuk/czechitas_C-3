@@ -8,43 +8,73 @@
 
 <PageTitle>Add To-Do Item</PageTitle>
 
-<h3>Add To-Do Item</h3>
+<br>
+<div class="container" style="background-color: beige;">
+    <div class="flex-container">
+        <h2>NEW TO-DO ITEM</h2>
+        @if (NewItem is not null)
+        {
+            <EditForm Model="NewItem" OnValidSubmit="Submit">
+                <DataAnnotationsValidator />
 
-@if (NewItem is not null)
-{
-    <EditForm Model="NewItem" OnValidSubmit="Submit">
-        <DataAnnotationsValidator />
+                <div class="itemToChange">
+                    <label for="Name" class="form-label">Your task name:</label>
+                    <InputText id="Name" class="form-control" @bind-Value="NewItem.Name" />
+                    <ValidationMessage For="() => NewItem.Name" />
+                </div>
+                <div class="itemToChange">
+                    <label for="Description" class="form-label">Your task description:</label>
+                    <InputText id="Description" class="form-control" @bind-Value="NewItem.Description" />
+                    <ValidationMessage For="() => NewItem.Description" />
+                </div>
+                <div class="itemToChange">
+                    <label for="Category" class="form-label">Your task category:</label>
+                    <InputText id="Category" class="form-control" @bind-Value="NewItem.Category" />
+                    <ValidationMessage For="() => NewItem.Category" />
+                </div>
+                <div class="itemToChange">
+                    <label for="TaskPriority" class="form-label">Priority:</label>
+                    <InputSelect id="TaskPriority" class="form-control" @bind-Value="NewItem.TaskPriority">
+                        @foreach (var priority in Enum.GetValues<Priority>().Cast<Priority>().Where(p => p !=
+                    Priority.Unknown))
+                        {
+                            <option value="@priority">@priority</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="() => NewItem.TaskPriority" />
+                </div>
+                <div class="itemToChange">
+                    <label for="IsCompleted" class="form-check-label">IsCompleted:</label>
+                    <InputCheckbox id="IsCompleted" class="form-check" @bind-Value="NewItem.IsCompleted" />
+                    <ValidationMessage For="() => NewItem.IsCompleted" />
+                </div>
+                <br>
 
-        <label for="Name" class="form-label">Name:</label>
-        <InputText id="Name" class="form-control" @bind-Value="NewItem.Name" />
-        <ValidationMessage For="() => NewItem.Name" />
-
-        <label for="Description" class="form-label">Description:</label>
-        <InputText id="Description" class="form-control" @bind-Value="NewItem.Description" />
-        <ValidationMessage For="() => NewItem.Description" />
-        <label for="Category" class="form-label">Category:</label>
-        <InputText id="Category" class="form-control" @bind-Value="NewItem.Category" />
-        <ValidationMessage For="() => NewItem.Category" />
-
-        <label for="TaskPriority" class="form-label">Priority:</label>
-        <InputSelect id="TaskPriority" class="form-control" @bind-Value="NewItem.TaskPriority">
-            @foreach (var priority in Enum.GetValues<Priority>().Cast<Priority>().Where(p => p != Priority.Unknown))
-            {
-                <option value="@priority">@priority</option>
-            }
-        </InputSelect>
-        <ValidationMessage For="() => NewItem.TaskPriority" />
-
-        <label for="IsCompleted" class="form-check-label">IsCompleted:</label>
-        <InputCheckbox id="IsCompleted" class="form-check" @bind-Value="NewItem.IsCompleted" />
-        <ValidationMessage For="() => NewItem.IsCompleted" />
-
-        <button type="submit" class="btn btn-primary">Add Item</button>
-    </EditForm>
-}
+                <button type="button" class="btn btn-danger" @onclick="Cancel">Cancel</button>
+                <button type="submit" class="btn btn-primary">Add Item</button>
+            </EditForm>
+        }
+    </div>
+</div>
 <style>
     body {
-        background-color: aqua;
+        background-image: linear-gradient(to right, rgb(70, 7, 153), rgb(26, 207, 10));
+    }
+
+    label {
+        font-weight: bolder;
+    }
+
+    .flex-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 2rem;
+    }
+
+    .itemToChange {
+        display: block;
+        padding-top: 1rem;
     }
 </style>
 
@@ -54,6 +84,11 @@
     protected override void OnInitialized()
     {
         NewItem = new ToDoItemView();
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/");
     }
 
     private async Task Submit()

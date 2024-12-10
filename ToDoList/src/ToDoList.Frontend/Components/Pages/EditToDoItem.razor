@@ -7,42 +7,77 @@
 @rendermode InteractiveServer
 
 
-<PageTitle>Edit To Do Item</PageTitle>
+<PageTitle>Edit To-Do Item</PageTitle>
 
+<br>
+<div class="container" style="background-color: beige;">
+    <div class="flex-container">
+        <h2>EDIT TO-DO ITEM</h2>
+        @if (ToDoItem is not null)
+        {
+            <EditForm Model="ToDoItem" FormName="EditToDoItem" OnValidSubmit="Submit">
+                <DataAnnotationsValidator />
+                <div class="itemToChange">
+                    <label for="Name" class="form-label">Your task name:</label>
+                    <InputText id="Name" class="form-control" @bind-Value="ToDoItem.Name" />
+                    <ValidationMessage For="() => ToDoItem.Name" />
+                </div>
+                <div class="itemToChange">
+                    <label for="Description" class="form-label">Your task description:</label>
+                    <InputText id="Description" class="form-control" @bind-Value="ToDoItem.Description" />
+                    <ValidationMessage For="() => ToDoItem.Description" />
+                </div>
+                <div class="itemToChange">
+                    <label for="Category" class="form-label">Your task category:</label>
+                    <InputText id="Category" class="form-control" @bind-Value="ToDoItem.Category" />
+                    <ValidationMessage For="() => ToDoItem.Category" />
+                </div>
+                <div class="itemToChange">
+                    <label for="TaskPriority" class="form-label">Priority:</label>
+                    <InputSelect id="TaskPriority" class="form-control" @bind-Value="ToDoItem.TaskPriority">
+                        @foreach (var priority in Enum.GetValues<Priority>().Cast<Priority>().Where(p => p !=
+                    Priority.Unknown))
+                        {
+                            <option value="@priority">@priority</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="() => ToDoItem.TaskPriority" />
+                </div>
+                <div class="itemToChange">
+                    <label for="IsCompleted" class="form-check-label">IsCompleted:</label>
+                    <InputCheckbox id="IsCompleted" class="form-check" @bind-Value="ToDoItem.IsCompleted" />
+                    <ValidationMessage For="() => ToDoItem.IsCompleted" />
+                </div>
+                <br>
+                <button type="button" class="btn btn-danger" @onclick="Cancel">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </EditForm>
 
-@if (ToDoItem is not null)
-{
-    <EditForm Model="ToDoItem" FormName="EditToDoItem" OnValidSubmit="Submit">
-        <DataAnnotationsValidator />
+        }
+    </div>
+</div>
 
-        <label for="Category" class="form-label">Category:</label>
-        <InputText id="Category" class="form-control" @bind-Value="ToDoItem.Category" />
-        <ValidationMessage For="() => ToDoItem.Category" />
+<style>
+    body {
+        background-image: linear-gradient(to right, rgb(70, 7, 153), rgb(26, 207, 10));
+    }
 
-        <label for="TaskPriority" class="form-label">Priority:</label>
-        <InputSelect id="TaskPriority" class="form-control" @bind-Value="ToDoItem.TaskPriority">
-            @foreach (var priority in Enum.GetValues<Priority>().Cast<Priority>().Where(p => p != Priority.Unknown))
-            {
-                <option value="@priority">@priority</option>
-            }
-        </InputSelect>
-        <ValidationMessage For="() => ToDoItem.TaskPriority" />
+    label {
+        font-weight: bolder;
+    }
 
-        <label for="Name" class="form-label">Name:</label>
-        <InputText id="Name" class="form-control" @bind-Value="ToDoItem.Name" />
-        <ValidationMessage For="() => ToDoItem.Name" />
+    .flex-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 2rem;
+    }
 
-        <label for="Description" class="form-label">Description:</label>
-        <InputText id="Description" class="form-control" @bind-Value="ToDoItem.Description" />
-        <ValidationMessage For="() => ToDoItem.Description" />
-
-        <label for="IsCompleted" class="form-check-label">IsCompleted:</label>
-        <InputCheckbox id="IsCompleted" class="form-check" @bind-Value="ToDoItem.IsCompleted" />
-        <ValidationMessage For="() => ToDoItem.IsCompleted" />
-
-        <button type="submit">Submit</button>
-    </EditForm>
-}
+    .itemToChange {
+        display: block;
+        padding-top: 1rem;
+    }
+</style>
 
 
 @code {
@@ -64,7 +99,10 @@
 
     [SupplyParameterFromForm]
     public ToDoItemView? ToDoItem { get; set; }
-
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/");
+    }
     public async Task Submit()
     {
         if (ToDoItem != null)
