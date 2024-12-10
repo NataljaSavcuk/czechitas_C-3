@@ -8,7 +8,7 @@
 
 @rendermode InteractiveServer
 
-<h1 style="color: white; text-align: center;">TO-DO LIST</h1>
+<h1 class="header">TO-DO LIST</h1>
 <br>
 <div class="container">
     <button class="btn btn-success" @onclick="AddNewItem">
@@ -26,10 +26,10 @@
     <table class="table table-hover">
         <thead class="table-dark" style="text-align: center;">
             <tr>
-                <th style="width: 15%;">PRIORITY
+                <th style="width: 15%; ">PRIORITY
                     <SortIcon Width="15px" Tooltip="Sort by task priority" OnClick="SortByPriority" />
                 </th>
-                <th style="width: 10%;">CATEGORY
+                <th style="width: 10%; ">CATEGORY
                     <SortIcon Width="15px" Tooltip="Sort by task category" OnClick="SortByCategory" />
                 </th>
                 <th>
@@ -42,13 +42,13 @@
                 <th style="width: 10%;">ACTIONS</th>
             </tr>
         </thead>
-        <tbody style="text-align: center;">
+        <tbody class="table-active" style="text-align: center;">
             @foreach (var toDoItem in displaiedListOfItems)
             {
-                <tr class="@(toDoItem.IsCompleted ? "table-success" : "table-secondary")">
+                <tr class="@(toDoItem.IsCompleted ? "table-success" : "table-warning")">
                     <td>@PriorityBadges(toDoItem.TaskPriority)</td>
-                    <td>@toDoItem.Category</td>
-                    <td style=" text-align: left; padding-left: 5rem;">
+                    <td class="category">@toDoItem.Category</td>
+                    <td style="text-align: left; padding-left: 5rem;">
                         <h5>@toDoItem.Name</h5>
                         <p>@toDoItem.Description</p>
                     </td>
@@ -57,9 +57,9 @@
                             style="background-color: blueviolet;" @onchange="() => OnChangeIsDone(toDoItem)" />
                     </td>
                     <td>
-                        <EditIcon Width=1rem; OnClick="() => EditItem(toDoItem)" Tooltip="Edit" />
-                        <DeleteIcon Width="1rem" Tooltip="Delete Item" DataBsToggle="modal" DataBsTarget="#deleteModal"
-                            OnClick="() => SetSelectedToDoItem(toDoItem)" />
+                        <EditIcon Width=1rem; OnClick="() => EditItem(toDoItem)" Tooltip="Edit task" BackgroundColor="yellow" />
+                        <DeleteIcon Width="1rem" Tooltip="Delete task" BackgroundColor="orange" DataBsToggle="modal"
+                            DataBsTarget="#deleteModal" OnClick="() => SetSelectedToDoItem(toDoItem)" />
                     </td>
                 </tr>
             }
@@ -89,22 +89,30 @@
 </div>
 
 <style>
+    .header {
+        color: white;
+        text-align: center;
+        text-decoration: underline;
+    }
+
     p {
         font-style: italic;
     }
 
+    .category {
+        font-weight: bolder;
+    }
+
     .table-success {
-        background-color: #28a745 !important;
         border: 2px solid #1e7e34 !important;
     }
 
-    .table-secondary {
-        background-color: #545b62 !important;
-        border: 2px solid #545b62 !important;
+    .table-warning {
+        border: 2px solid #d88211 !important;
     }
 
     tr.table-success:hover,
-    tr.table-secondary:hover {
+    tr.table-warning:hover {
         opacity: 1;
         transform: scale(1.02);
 </style>
@@ -151,12 +159,9 @@
             )
             };
     }
-
     public void ToggleSort(string sortKey)
     {
         if (!sortingLists.ContainsKey(sortKey)) return;
-
-        // Toggle sort direction if already sorting by this key
         if (currentSort == sortKey)
         {
             isAscending = !isAscending;
@@ -181,7 +186,6 @@
     {
         NavigationManager.NavigateTo($"editToDoItem/{toDoItem.ToDoItemId}");
     }
-
     private void SetSelectedToDoItem(ToDoItemView toDoItem)
     {
         SelectedToDoItem = toDoItem;
@@ -213,19 +217,11 @@
         };
     }
 
-    public async Task OnChangeIsDone(ToDoItemView request)
+    public async Task OnChangeIsDone(ToDoItemView toDoItem)
     {
-        var updatedToDoItem = new ToDoItemView
-            {
-                ToDoItemId = request.ToDoItemId,
-                Name = request.Name,
-                Description = request.Description,
-                Category = request.Category,
-                TaskPriority = request.TaskPriority,
-                IsCompleted = !request.IsCompleted
-            };
-        await ToDoItemsClient.UpdateItemAsync(updatedToDoItem);
-        toDoItems = await ToDoItemsClient.ReadItemsAsync();
+        toDoItem.IsCompleted = !toDoItem.IsCompleted;
+        await ToDoItemsClient.UpdateItemAsync(toDoItem);
         InitializeSortingLists();
+        StateHasChanged();
     }
 }
