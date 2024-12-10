@@ -17,11 +17,11 @@
 </div>
 <br>
 
-@if (displaiedListOfItems is null)
+@if (toDoItems is null)
 {
     <p>Loading...</p>
 }
-@if (displaiedListOfItems != null)
+@if (toDoItems != null)
 {
     <table class="table table-hover">
         <thead class="table-dark" style="text-align: center;">
@@ -43,7 +43,7 @@
             </tr>
         </thead>
         <tbody class="table-active" style="text-align: center;">
-            @foreach (var toDoItem in displaiedListOfItems)
+            @foreach (var toDoItem in toDoItems)
             {
                 <tr class="@(toDoItem.IsCompleted ? "table-success" : "table-warning")">
                     <td>@PriorityBadges(toDoItem.TaskPriority)</td>
@@ -121,62 +121,44 @@
 {
     private ToDoItemView? SelectedToDoItem { get; set; }
     private List<ToDoItemView>? toDoItems;
-    public List<ToDoItemView> displaiedListOfItems = new();
-    public void SortByDone() => ToggleSort("Done");
-    public void SortByName() => ToggleSort("Name");
-    public void SortByCategory() => ToggleSort("Category");
-    public void SortByPriority() => ToggleSort("Priority");
+    private string ascDesc { get; set; } = "asc";
 
     protected override async Task OnInitializedAsync()
     {
         toDoItems = await ToDoItemsClient.ReadItemsAsync();
-        InitializeSortingLists();
-        displaiedListOfItems = toDoItems.OrderBy(item => item.Name).ToList();
     }
-    private Dictionary<string, (List<ToDoItemView> Asc, List<ToDoItemView> Desc)> sortingLists;
-    private string currentSort = "Name";
-    private bool isAscending = true;
-
-    private void InitializeSortingLists()
+    private void ToggleSortOrder()
     {
-        sortingLists = new Dictionary<string, (List<ToDoItemView>, List<ToDoItemView>)>
-            {
-                ["Done"] = (
-            toDoItems.OrderBy(item => item.IsCompleted).ToList(),
-            toDoItems.OrderByDescending(item => item.IsCompleted).ToList()
-            ),
-                ["Name"] = (
-            toDoItems.OrderBy(item => item.Name).ToList(),
-            toDoItems.OrderByDescending(item => item.Name).ToList()
-            ),
-                ["Category"] = (
-            toDoItems.OrderBy(item => item.Category).ToList(),
-            toDoItems.OrderByDescending(item => item.Category).ToList()
-            ),
-                ["Priority"] = (
-            toDoItems.OrderBy(item => item.TaskPriority).ToList(),
-            toDoItems.OrderByDescending(item => item.TaskPriority).ToList()
-            )
-            };
+        ascDesc = ascDesc == "asc" ? "desc" : "asc";
     }
-    public void ToggleSort(string sortKey)
+    public void SortByName()
     {
-        if (!sortingLists.ContainsKey(sortKey)) return;
-        if (currentSort == sortKey)
-        {
-            isAscending = !isAscending;
-        }
-        else
-        {
-            currentSort = sortKey;
-            isAscending = true;
-        }
-
-        displaiedListOfItems = isAscending
-        ? sortingLists[sortKey].Asc
-        : sortingLists[sortKey].Desc;
+        toDoItems = ascDesc == "asc"
+        ? toDoItems.OrderBy(i => i.Name).ToList()
+        : toDoItems.OrderByDescending(i => i.Name).ToList();
+        ascDesc = ascDesc == "asc" ? "desc" : "asc";
     }
-
+    public void SortByCategory()
+    {
+        toDoItems = ascDesc == "asc"
+        ? toDoItems.OrderBy(i => i.Category).ToList()
+        : toDoItems.OrderByDescending(i => i.Category).ToList();
+        ascDesc = ascDesc == "asc" ? "desc" : "asc";
+    }
+    public void SortByPriority()
+    {
+        toDoItems = ascDesc == "asc"
+        ? toDoItems.OrderBy(i => i.TaskPriority).ToList()
+        : toDoItems.OrderByDescending(i => i.TaskPriority).ToList();
+        ascDesc = ascDesc == "asc" ? "desc" : "asc";
+    }
+    public void SortByDone()
+    {
+        toDoItems = ascDesc == "asc"
+        ? toDoItems.OrderBy(i => i.IsCompleted).ToList()
+        : toDoItems.OrderByDescending(i => i.IsCompleted).ToList();
+        ascDesc = ascDesc == "asc" ? "desc" : "asc";
+    }
     public void AddNewItem()
     {
         NavigationManager.NavigateTo("addNewItem/");
@@ -190,13 +172,12 @@
     {
         SelectedToDoItem = toDoItem;
     }
-
     private async Task ConfirmDeletion()
     {
         if (SelectedToDoItem != null)
         {
             await ToDoItemsClient.DeleteItemAsync(SelectedToDoItem);
-            displaiedListOfItems.Remove(SelectedToDoItem);
+            toDoItems = await ToDoItemsClient.ReadItemsAsync();
             SelectedToDoItem = null;
         }
     }
@@ -204,7 +185,6 @@
     {
         await ToDoItemsClient.DeleteItemAsync(toDoItem);
     }
-
     public MarkupString PriorityBadges(Priority priority)
     {
         return priority switch
@@ -216,12 +196,10 @@
             _ => (MarkupString)""
         };
     }
-
     public async Task OnChangeIsDone(ToDoItemView toDoItem)
     {
         toDoItem.IsCompleted = !toDoItem.IsCompleted;
         await ToDoItemsClient.UpdateItemAsync(toDoItem);
-        InitializeSortingLists();
-        StateHasChanged();
+        toDoItems = await ToDoItemsClient.ReadItemsAsync();
     }
 }
